@@ -24,7 +24,9 @@ for s in strings:
 			if c not in string.printable or c in ['\n', '\t', '\r', '\x0b', '\x0c']:
 				valid = False
 				break
-			if c in string.ascii_letters:
+			elif c == ' ':
+				puntos += 2
+			elif c in string.ascii_letters:
 				puntos += 1
 		if valid:
 			candidatos.append([puntos, pt])
