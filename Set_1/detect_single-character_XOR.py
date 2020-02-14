@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 import string
@@ -7,32 +7,37 @@ fh = open('4.txt', 'r')
 strings = fh.read().split()
 fh.close()
 
-candidatos = []
-for s in strings:
+def find_single_byte_xor(ct):
+	frec = {}
 
-	plaintexts = []
-	for k in xrange(0xff + 1):
-		r = ''
-		for b in s.decode('hex'):
-			r += chr( ord(b) ^ k )
-		plaintexts.append(r)
+	for b in ct:
+		if b not in frec:
+			frec[b] = 1
+		else:
+			frec[b] += 1
 
-	for pt in plaintexts:
+	frec = sorted(frec, key=lambda elem: -frec[elem])
+
+	resp = []
+	for b in frec:
+		# space is likely the most common char in plain text
+		key = ord(' ') ^ b
+		r = b''
 		valid = True
-		puntos = 0
-		for c in pt:
-			if c not in string.printable or c in ['\n', '\t', '\r', '\x0b', '\x0c']:
+		for i in range(len(ct)):
+			c = bytes([ ct[i] ^ key ])
+			if c not in bytes(string.printable, 'ascii'):
 				valid = False
 				break
-			elif c == ' ':
-				puntos += 2
-			elif c in string.ascii_letters:
-				puntos += 1
-		if valid:
-			candidatos.append([puntos, pt])
+			r += c
+		if valid is False:
+			continue
+		r = str(r,'ascii')
+		resp.append(r)
+	return resp
 
-
-if len(candidatos) > 0:
-	candidatos = sorted(candidatos, key=lambda elem: elem[0])
-	for a, b in candidatos:
-		print a, b
+for candidato in strings:
+	ct = bytes.fromhex(candidato)
+	r = find_single_byte_xor(ct)
+	if len(r) > 0:
+		print(r[0])
