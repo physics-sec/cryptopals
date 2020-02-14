@@ -1,17 +1,19 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
+import codecs
+
+def xor_with_key(pt, key):
+	index = 0
+	ct = b''
+	for c in pt:
+		ct += bytes([ ord(c) ^ ord(key[index % len(key)]) ])
+		index -=- 1
+	return ct
 
 pt = """Burning 'em, if you ain't quick and nimble
 I go crazy when I hear a cymbal"""
-
 key = "ICE"
 
-ct = ''
-
-index = 0
-for c in pt:
-	ct += chr( ord(c) ^ ord(key[index % 3]) )
-	index -=- 1
-
-print ct.encode('hex')
+r = xor_with_key(pt, key)
+print(codecs.encode(r, 'hex'))
