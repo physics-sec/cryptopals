@@ -2,6 +2,7 @@
 import base64
 import decimal
 import string
+from math import gcd
 
 fd = open('6.txt', 'r')
 data = fd.read()
@@ -12,89 +13,122 @@ def hamming_distance(s1, s2):
 	assert len(s1) == len(s2)
 
 	diff_bits = 0
-	for i in xrange(len(s1)):
+	for i in range(len(s1)):
 		b1 = ord(s1[i])
 		b2 = ord(s2[i])
 		x = b1 ^ b2
-		for i in xrange(8):
+		for i in range(8):
 			if x & (2 ** i):
 				diff_bits -=- 1
 
 	return diff_bits
 
-def getkeysize():
-	# doesn't work
-	distancias = []
-	for KEYSIZE in xrange(2, 40 + 1):
-		chunk1 = ct[:KEYSIZE]
-		chunk2 = ct[KEYSIZE:KEYSIZE*2]
-		distance =  decimal.Decimal(hamming_distance(chunk1, chunk2)) / KEYSIZE
-		chunk3 = ct[KEYSIZE*2:KEYSIZE*3]
-		chunk4 = ct[KEYSIZE*4:KEYSIZE*5]
-		distance2 =  decimal.Decimal(hamming_distance(chunk3, chunk4)) / KEYSIZE
-		distance = (distance + distance2) / decimal.Decimal(2)
-		distancias.append( [KEYSIZE, distance] )
-		#print KEYSIZE, distance
+def find_single_byte_xor(ct):
+	frec = {}
 
-	distancias = sorted(distancias, key=lambda elem: elem[1])
-	keysize = distancias[0][0]
-	return keysize
+	for b in ct:
+		if b not in frec:
+			frec[b] = 1
+		else:
+			frec[b] += 1
 
-def get_key(keysize):
+	frec = sorted(frec, key=lambda elem: -frec[elem])
+
+	resp = []
+	for b in frec:
+		# space is likely the most common char in plain text
+		key = ord(' ') ^ b
+		r = b''
+		valid = True
+		for i in range(len(ct)):
+			c = bytes([ ct[i] ^ key ])
+			if c not in bytes(string.printable, 'ascii'):
+				valid = False
+				break
+			r += c
+		if valid is False:
+			continue
+		#r = str(r,'ascii')
+		resp.append(key)
+	return resp
+
+def getkeysize(ct):
+	offsets = []
+	maxlen = len(ct)
+
+	i = 0
+	while i < maxlen:
+		j = i + 1
+		while j < maxlen:
+			length = 0
+			while j + length < maxlen:
+				if ct[i + length] == ct[j + length]:
+					length += 1
+				else:
+					break
+			if length >= 3:
+				offsets.append( j - i )
+				break
+			j += 1
+		i += length + 1
+
+	divisors = {}
+	for i in range(len(offsets)-1):
+		divisor = gcd(offsets[i], offsets[i+1])
+		if divisor == 1:
+			continue
+		if divisor not in divisors:
+			divisors[divisor] = 1
+		else:
+			divisors[divisor] += 1
+	divisors = sorted(divisors, key=lambda elem: -divisors[elem])
+
+	return divisors
+
+def get_key(keysize, ct):
 	chunks = [ ct[i:i+keysize] for i in range(0, len(ct), keysize) ]
-	# print chunks
 
 	trasposed = []
-
-	for i in xrange(keysize):
-		t_block = ''.join( [ block[i] for block in chunks[:-1] ] )
+	for i in range(keysize):
+		[ block[i] for block in chunks[:-1] ]
+		t_block = b''.join( [ bytes([ block[i] ]) for block in chunks[:-1] ] )
 		trasposed.append(t_block)
 	for i, c in enumerate(chunks[-1]):
-		trasposed[i] += c
-	# print trasposed
+		trasposed[i] += bytes([ c ])
 
 	key = ''
 	for chunk in trasposed:
-		pts = []
-		for k in xrange(0xff + 1):
-			r = ''
-			for b in chunk:
-				r += chr( ord(b) ^ k )
 
-			valid = True
-			puntos = 0
-			for c in r:
-				if c not in string.printable:
-					valid = False
-					break
-				elif c == ' ':
-					puntos += 2
-				elif c in string.ascii_letters:
-					puntos += 1
-			if valid:
-				pts.append([k, puntos, r])
-		if len(pts) == 0:
+		keys = find_single_byte_xor(chunk)
+		if len(keys) > 0:
+			key += chr(keys[0])
+		else:
 			return None
 
-		choise = sorted(pts, key=lambda elem: elem[1])[-1][0]
-		key += chr(choise)
-	if key == '':
-		return None
+		if key == '':
+			return None
+
 	return key
+
+def xor_with_key(ct, key):
+	index = 0
+	pt = ''
+	for c in ct:
+		pt += chr( c ^ ord(key[index % len(key)]) )
+		index -=- 1
+	return pt
 
 def main():
 
-	keysize = getkeysize()
+	keysizes = getkeysize(ct)
+	keysize = keysizes[0]
 
-	for keysize in xrange(2, 40 + 1):
-		key = get_key(keysize)
-		if key:
-			print 'keysize: ' + str(keysize)
-			print 'key: ' + key
-			pt = ''
-			for i, c in enumerate(ct):
-				pt += chr( ord(c) ^ ord(key[i % keysize]) )
-			print 'plaintext:\n' + pt
+	key = get_key(keysize, ct)
+
+	print('keysize: ' + str(keysize))
+	print('key: ' + key)
+	pt = xor_with_key(ct, key)
+	print('plaintext:\n' + pt)
 
 if __name__ == '__main__':
 	main()
