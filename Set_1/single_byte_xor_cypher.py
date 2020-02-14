@@ -1,28 +1,23 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import string
-s = '1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736'
+ct = bytes.fromhex('1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736').decode('utf-8')
 
-results = []
-for k in xrange(0xff + 1):
-	r = ''
-	for b in s.decode('hex'):
-		r += chr( ord(b) ^ k )
-	results.append(r)
+frec = {}
 
-final = []
-for rel in results:
-	valid = True
-	puntos = 0
-	for c in rel:
-		if c not in string.printable or c in ['\n', '\t', '\r', '\x0b', '\x0c']:
-			valid = False
-			break
-		if c in string.ascii_letters:
-			puntos += 1
-	if valid:
-		final.append([puntos, rel])
+for b in ct:
+	if str(b) not in frec:
+		frec[str(b)] = 1
+	else:
+		frec[str(b)] += 1
 
-for p, rel in final:
-	print p, rel
+frec = sorted(frec, key=lambda elem: -frec[elem[0]])
+
+for b in frec:
+	# space is likely the most common char in plain text
+	key = ord(' ') ^ ord(b)
+	r = b''
+	for i in range(len(ct)):
+		r += bytes([ ord(ct[i]) ^ key ])
+	r = str(r,'ascii')
+	print(r)
