@@ -21,16 +21,17 @@ def find_single_byte_xor(ct):
 		# space is likely the most common char in plain text
 		key = ord(' ') ^ b
 		r = b''
-		for i in range(len(ct)):
-			r += bytes([ ct[i] ^ key ])
-		r = str(r,'ascii')
 		valid = True
-		for b in r:
-			if b not in string.printable:
+		for i in range(len(ct)):
+			c = bytes([ ct[i] ^ key ])
+			if c not in bytes(string.printable, 'ascii'):
 				valid = False
 				break
-		if valid:
-			resp.append(r)
+			r += c
+		if valid is False:
+			continue
+		r = str(r,'ascii')
+		resp.append(r)
 	return resp
 
 print(find_single_byte_xor(ct)[0])
