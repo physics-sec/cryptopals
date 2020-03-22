@@ -10,7 +10,6 @@ def decrypt_AES_ECB(data, key):
 	assert len(key) == 128/8
 	cipher = AES.new(key, AES.MODE_ECB)
 	pt = cipher.decrypt(data)
-	pt = pt.decode('utf-8')
 	return pt
 
 fh = open('7.txt', 'r')
@@ -21,5 +20,5 @@ fh.close()
 key = b'YELLOW SUBMARINE'
 
 pt = decrypt_AES_ECB(data, key)
-
+pt = pt.decode('utf-8')
 print(pt)
