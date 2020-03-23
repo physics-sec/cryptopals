@@ -2,9 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
-import random
 import base64
-import string
 from Crypto.Cipher import AES
 
 def rand_bytes(len):
