@@ -102,11 +102,11 @@ def decrypt_AES_CBC(ciphertext, iv):
 def enc():
 	data = s.split('\n')[random.randint(0, 9)]
 	data = base64.b64decode(data)
-	#data = b'A' * 16 + b'ABCDEFHIJKLMNOPQ' + b'aoisdjasoifbsfSANTI'
 	ct, iv = encrypt_AES_CBC(data)
 	return [ct, iv]
 
 def pad_oracle_attack(C1, C2, iv):
+	# https://robertheaton.com/2013/07/29/padding-oracle-attack/
 
 	C1_original = C1
 	leaked = b''
