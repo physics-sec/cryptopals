@@ -27,6 +27,14 @@ def CTR(key, nonce, msg):
 		plaintext = nonce + counter
 		ct = encrypt_AES_ECB(key, plaintext)
 		ciphertext += xor(ct, msg[n*count:n*(count+1)])
+
+	msg_len = len(msg)
+	if msg_len % n != 0:
+		count += 1
+		counter = struct.pack("<Q", count)
+		plaintext = nonce + counter
+		ct = encrypt_AES_ECB(key, plaintext)
+		ciphertext += xor(ct[:msg_len % n], msg[n*count:])
 	return ciphertext
 
 def main():
