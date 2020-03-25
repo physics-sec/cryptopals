@@ -3,8 +3,6 @@
 
 import os
 import struct
-import random
-import string
 import base64
 from Crypto.Cipher import AES
 
@@ -101,7 +99,7 @@ QSB0ZXJyaWJsZSBiZWF1dHkgaXMgYm9ybi4="""
 
 	# get real key for testing
 	k = ''
-	for count in range(3):
+	for count in range(max_pt_len  // 16 + 1):
 		counter = struct.pack("<Q", count)
 		plaintext = nonce + counter
 		ct = encrypt_AES_ECB(AES_key, plaintext)
@@ -115,6 +113,10 @@ QSB0ZXJyaWJsZSBiZWF1dHkgaXMgYm9ybi4="""
 	# reduced on porpuse
 	printable = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!\',-.:;? '
 	printable_frist = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+	for char in printable:
+		if char not in frec_english:
+			frec_english.append(char)
 
 	derived_key = {}
 	for pos in range(max_pt_len):
@@ -177,15 +179,18 @@ QSB0ZXJyaWJsZSBiZWF1dHkgaXMgYm9ybi4="""
 	print('Derived {:d} bytes of {:d}'.format(len(recovered_key), max_pt_len))
 	print('')
 
+	ks_len = len(recovered_key)
 	for ct in cts:
-		ks_len = len(recovered_key)
 		ct_len = len(ct)
+		xor_key = recovered_key
 		if ct_len > ks_len:
 			ct = ct[:ks_len]
 		elif ct_len < ks_len:
-			recovered_key = recovered_key[:ct_len]
-		pt = xor(recovered_key, ct)
-		print(pt)
+			xor_key = recovered_key[:ct_len]
+		pt = xor(xor_key, ct)
+		if pt:
+			print(pt)
+
 
 if __name__ == '__main__':
 	main()
