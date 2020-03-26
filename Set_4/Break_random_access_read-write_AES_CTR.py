@@ -3,7 +3,11 @@
 
 import struct
 import base64
+import os
 from Crypto.Cipher import AES
+
+key = os.urandom(16)
+nonce = b'\x00\x00\x00\x00\x00\x00\x00\x00'
 
 def xor(x1, x2):
 	assert len(x1) == len(x2)
@@ -21,6 +25,7 @@ def encrypt_AES_ECB(key, plaintext):
 
 def CTR(key, nonce, msg):
 	msg_len = len(msg)
+	assert len(nonce) == 8
 	n = 16
 	count = -1
 	ciphertext = b''
@@ -38,15 +43,31 @@ def CTR(key, nonce, msg):
 		ciphertext += xor(ct[:msg_len % n], msg[n*count:])
 	return ciphertext
 
+def edit(ciphertext, offset, newtext):
+	pad = b'\x00' * offset
+	newct = CTR(key, nonce, pad + newtext)
+	newct = ciphertext[:offset] + newct[offset:offset+len(newtext)] + ciphertext[offset+len(newtext):]
+	return newct
+
+def get_ct():
+	fh = open('plaintext.b64', 'r')
+	data = fh.read()
+	data = base64.b64decode(data)
+	fh.close()
+
+	ct = CTR(key, nonce, data)
+	return ct
+
 def main():
-	msg = "L77na/nrFsKvynd6HzOoG7GHTLXsTVu9qvY/2syLXzhPweyyMTJULu/6/kXX0KSvoOLSFQ=="
-	msg = base64.b64decode(msg)
+	ct = get_ct()
 
-	key = b'YELLOW SUBMARINE'
+	pt = b'\x00' * len(ct)
 
-	nonce = b'\x00\x00\x00\x00\x00\x00\x00\x00'
+	new_ct = edit(ct, 0, pt)
 
-	pt = CTR(key, nonce, msg)
+	keystream = xor(new_ct, pt)
+
+	pt = xor(ct, keystream)
 
 	print(pt)
 
