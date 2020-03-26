@@ -60,7 +60,7 @@ class MT19937:
             self.MT[i] = self.MT[(i + self.m) % self.n] ^ xA
         self.index = 0
 
-def step1(y):
+def unstep1(y):
 
     c = 0
     aux = y ^ ((y >> 11) & 0xFFFFFFFF)
@@ -73,7 +73,7 @@ def step1(y):
 
     return c
 
-def step2(y):
+def unstep2(y):
 
     c = 0
     aux = y & 0x7F
@@ -97,7 +97,7 @@ def step2(y):
 
     return c
 
-def step3(y):
+def unstep3(y):
 
     c = 0
     aux = y & 0x7FFF
@@ -117,15 +117,15 @@ def step3(y):
 
     return c
 
-def step4(y):
+def unstep4(y):
     c = y ^ (y >> 18)
     return c
 
 def untemper(y):
-    y = step4(y)
-    y = step3(y)
-    y = step2(y)
-    y = step1(y)
+    y = unstep4(y)
+    y = unstep3(y)
+    y = unstep2(y)
+    y = unstep1(y)
     return y
 
 def main():
