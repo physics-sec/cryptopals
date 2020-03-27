@@ -207,12 +207,12 @@ def main():
     keylen = random.randint(16, 64)
     key = os.urandom(keylen)
 
-    msg = randomString(random.randint(1, 100)).encode('utf-8')
+    msg = b"comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon"
 
     mac = HMAC_SHA1(msg, key)
     mac = bytes.fromhex(mac)
 
-    msg_extension = b'_EXTENDED!'
+    msg_extension = b";admin=true"
 
     print('message is:')
     print(msg)
