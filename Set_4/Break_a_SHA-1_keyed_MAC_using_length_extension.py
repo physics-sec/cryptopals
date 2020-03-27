@@ -5,8 +5,6 @@ import struct
 import io
 import os
 import random
-import string
-
 
 class Sha1Hash(object):
     """A class that mimics that hashlib api and implements the SHA-1 algorithm."""
@@ -159,10 +157,6 @@ def HMAC_SHA1(message, key):
 def check_mac(message, mac, key):
     return HMAC_SHA1(message, key) == mac
 
-def randomString(stringLength):
-    letters = string.ascii_lowercase
-    return ''.join(random.choice(letters) for i in range(stringLength))
-
 def get_padding(message_byte_length):
 
     pad = b''
@@ -178,10 +172,6 @@ def get_padding(message_byte_length):
     pad += struct.pack(b'>Q', message_bit_length)
 
     return pad
-
-def randomString(stringLength):
-    letters = string.ascii_lowercase
-    return ''.join(random.choice(letters) for i in range(stringLength))
 
 def length_extension_sha1(oldmac, oldmsg, keylen, extension):
 
