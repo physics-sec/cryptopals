@@ -20,7 +20,6 @@ def main():
 
 	url_base = 'http://127.0.0.1:9000/test?file={}&signature='.format(file)
 
-	signature = b'\x00' * 20
 	signature = b''
 
 	for b_nro in range(20):
@@ -56,7 +55,6 @@ def main():
 			print(a)
 
 			old_candidats = len(candidats)
-			print('antes:{:d}'.format(old_candidats))
 
 			for i, b in enumerate(byte_delay):
 				if b not in score:
@@ -76,8 +74,6 @@ def main():
 
 			score = new_score.copy()
 
-			print('ahora:{:d}\n'.format(len(candidats)))
-
 			if len(candidats) == 1:
 				signature += bytes( [candidats[0]] )
 				print('signature:{}'.format(signature.hex() + '__' * (20 - len(signature))))
@@ -85,10 +81,6 @@ def main():
 				if signature[b_nro] != bytes.fromhex(real_mac)[b_nro]:
 					print('Fail!')
 					return
-
-			if len(candidats) == 0:
-				print('Error! no more candidats')
-				exit()
 
 	r = requests.post(url_base + signature.hex())
 	if r.status_code == 200:
