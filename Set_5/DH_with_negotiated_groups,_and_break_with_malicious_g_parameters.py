@@ -252,54 +252,6 @@ class Person():
 		ct = iv_ct[16:]
 		return decrypt_AES_CBC(ct, key, iv).decode('utf-8')
 
-
-
-# Iterative Function to calculate  
-# (x ^ y)%p in O(log y)  
-def powmod(x, y, p):  
-  
-	res = 1; # Initialize result  
-  
-	x = x % p; # Update x if it is more  
-			   # than or equal to p  
-  
-	while (y > 0):  
-		  
-		# If y is odd, multiply x with result  
-		if (y & 1):  
-			res = (res * x) % p;  
-  
-		# y must be even now  
-		y = y >> 1; # y = y/2  
-		x = (x * x) % p;  
-	return res;  
-
-# Function to calculate k for given a, b, m  
-def discreteLogarithm(a, b, m):  
-	n = int(math.sqrt(m) + 1);
-
-	value = [0] * m;
-
-	# Store all values of a^(n*i) of LHS  
-	for i in range(n, 0, -1):  
-		value[ pow (a, i * n, m) ] = i;  
-
-	for j in range(n):
-		  
-		# Calculate (a ^ j) * b and check  
-		# for collision  
-		cur = (pow (a, j, m) * b) % m;
-
-		# If collision occurs i.e., LHS = RHS  
-		if (value[cur]):  
-			ans = value[cur] * n - j;  
-			  
-			# Check whether ans lies below m or not  
-			if (ans < m):
-				return ans;
-
-	return -1;  
-
 def attack1():
 	g = 2
 	p = 0xffffffffffffffffc90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74020bbea63b139b22514a08798e3404ddef9519b3cd3a431b302b0a6df25f14374fe1356d6d51c245e485b576625e7ec6f44c42e9a637ed6b0bff5cb6f406b7edee386bfb5a899fa5ae9f24117c4b1fe649286651ece45b3dc2007cb8a163bf0598da48361c55d39a69163fa8fd24cf5f83655d23dca3ad961c62f356208552bb9ed529077096966d670c354e4abc9804f1746c08ca237327ffffffffffffffff
