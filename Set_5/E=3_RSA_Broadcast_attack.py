@@ -70,7 +70,7 @@ class RSA():
 	def get_public_key(self):
 		return [self.e, self.n]
 
-	def get_public_key(self):
+	def get_private_key(self):
 		return [self.d, self.n]
 
 	def int_to_bytes(self, integer):
