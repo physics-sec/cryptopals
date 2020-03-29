@@ -42,27 +42,32 @@ class RSA():
 	def get_public_key(self):
 		return [self.d, self.n]
 
+	def int_to_bytes(self, integer):
+		hex_string = "%x" % integer
+		if len(hex_string) % 2 == 1:
+			hex_string = '0' + hex_string
+		return bytes.fromhex(hex_string)
+
+	def bytes_to_int(self, byte_arr):
+		return int.from_bytes(byte_arr, 'big')
+
 	def encrypt(self, plaintext, e=None, n=None):
 		if e is None and n is None:
 			e = self.e
 			n = self.n
-		plaintext  = plaintext.hex()
-		plaintext  = int(plaintext, 16)
+		plaintext = self.bytes_to_int(plaintext)
 		if plaintext > n:
 			raise Exception('plaintext is longer than n')
 		ciphertext = pow(plaintext, e, n)
-		ciphertext = "%x" % ciphertext
-		ciphertext = bytes.fromhex(ciphertext)
+		ciphertext = self.int_to_bytes(ciphertext)
 		return ciphertext
 
 	def decrypt(self, ciphertext):
-		ciphertext = ciphertext.hex()
-		ciphertext = int(ciphertext, 16)
+		ciphertext = self.bytes_to_int(ciphertext)
 		if ciphertext > self.n:
 			raise Exception('ciphertext is longer than n')
-		plaintext  = pow(ciphertext, self.d, self.n)
-		plaintext = "%x" % plaintext
-		plaintext = bytes.fromhex(plaintext)
+		plaintext = pow(ciphertext, self.d, self.n)
+		plaintext = self.int_to_bytes(plaintext)
 		return plaintext
 
 def main():
