@@ -80,6 +80,12 @@ class DSA():
 		v   = ((pow(self.g, u1, self.p) * pow(self.y, u2, self.p)) % self.p) % self.q
 		return v == r
 
+def recover_x(s, k, H_m, r, q):
+	dsa = DSA()
+	inv_r = dsa.invmod(r, q)
+	x = (((s * k) - H_m) * inv_r) % q
+	return x
+
 def main():
 	dsa = DSA()
 	msg = b"For those that envy a MC it can be hazardous to your health\nSo be friendly, a matter of life and death, just like a etch-a-sketch\n"
@@ -100,6 +106,7 @@ def main():
 
 	for k in range(2**16):
 		x = (((s * k) - digest) * inv_r) % q
+		x = recover_x(s, k, digest, r, q)
 		try:
 			new_r, new_s = dsa.sign(msg, x, k)
 			new_r = dsa.bytes_to_int(new_r)
