@@ -56,7 +56,7 @@ class DSA():
 
 		r = pow(self.g, k, self.p) % self.q
 		if r == 0:
-			return self.sign(messag, x, k)
+			return self.sign(message, x, k)
 		inv_k = self.invmod(k, self.q)
 		sha1 = hashlib.sha1()
 		sha1.update(message)
