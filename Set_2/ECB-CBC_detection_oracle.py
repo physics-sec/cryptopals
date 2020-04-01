@@ -3,6 +3,7 @@
 
 import os
 import random
+import collections
 from Crypto.Cipher import AES
 
 def pad(s, pad_len=16):
@@ -12,12 +13,10 @@ def pad(s, pad_len=16):
 	pad = bytes([ b_len ]) * b_len
 	return s + pad
 
-def xor(x1, x2):
-	assert len(x1) == len(x2)
-	r = b''
-	for i in range(len(x1)):
-		r += bytes([ x1[i] ^ x2[i] ])
-	return r
+def xor(x1, x2): 
+    assert len(x1) == len(x2) 
+    b_list = list(map(lambda x,y: x^y, x1, x2)) 
+    return bytes( b_list )
 
 def encrypt_AES_ECB(plaintext, key, do_pad=True):
 	assert len(key) == 128/8
@@ -65,12 +64,9 @@ def encryption_oracle(data):
 def index_of_coincidence(data):
 	data_len = len(data)
 	d = data_len * (data_len - 1)
-	frec = {}
+	frec = collections.Counter()
 	for b in data:
-		if b not in frec:
-			frec[b]  = 1
-		else:
-			frec[b] += 1
+		frec[b] += 1
 	ic = 0
 	for b in frec:
 		ic += (frec[b] * (frec[b] - 1)) / d

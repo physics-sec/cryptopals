@@ -38,7 +38,7 @@ def get_block_size_and_secret_len():
 		len_new = len(ct_new)
 	bs = len_new - len_normal
 
-	blocks_len = int( len(ct_normal) / bs )
+	blocks_len = len(ct_normal) // bs 
 	key_size  = bs * (blocks_len - 1)
 	key_size += bs - i
 	return [bs, key_size]

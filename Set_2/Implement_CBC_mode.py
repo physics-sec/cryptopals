@@ -5,12 +5,10 @@ import base64
 import codecs
 from Crypto.Cipher import AES
 
-def xor(x1, x2):
-	assert len(x1) == len(x2)
-	r = b''
-	for i in range(len(x1)):
-		r += bytes([ x1[i] ^ x2[i] ])
-	return codecs.encode(r, 'hex')
+def xor(x1, x2): 
+    assert len(x1) == len(x2) 
+    b_list = list(map(lambda x,y: x^y, x1, x2)) 
+    return bytes( b_list ) 
 
 def decrypt_AES_ECB(data, key):
 	assert len(key) == 128/8
@@ -26,15 +24,15 @@ def decrypt_AES_CBC(ciphertext, key, iv):
 	assert ciphertext_len % n == 0
 
 	blocks = [ciphertext[i:i+n] for i in range(0, ciphertext_len, n)]
-	pt = b''
+	pt = []
 	previus_block = iv
 
 	for block in blocks:
 		d_block = decrypt_AES_ECB(block, key)
 		pt_block = xor(d_block, previus_block)
-		pt += pt_block
+		pt.append(pt_block)
 		previus_block = block
-	return pt
+	return b''.join(pt)
 
 
 fh = open('10.txt', 'r')
@@ -46,8 +44,6 @@ key = b'YELLOW SUBMARINE'
 
 iv = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
 
-hex_encoded = decrypt_AES_CBC(data, key, iv)
-hex_encoded = hex_encoded.decode('utf-8')
-plaintext = bytes.fromhex(hex_encoded).decode('utf-8')
-
+plaintext = decrypt_AES_CBC(data, key, iv)
+plaintext = plaintext.decode('utf-8')
 print(plaintext)
