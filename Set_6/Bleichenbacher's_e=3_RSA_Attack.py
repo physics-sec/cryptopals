@@ -46,10 +46,13 @@ class RSA():
 	def get_private_key(self):
 		return [self.d, self.n]
 
-	def int_to_bytes(self, integer):
+	def int_to_bytes(self, integer, size=None):
 		hex_string = "%x" % integer
 		if len(hex_string) % 2 == 1:
 			hex_string = '0' + hex_string
+		if size and len(hex_string) // 2 < size:
+			nullbytes = '00' * (size - len(hex_string) // 2)
+			hex_string = nullbytes  + hex_string
 		return bytes.fromhex(hex_string)
 
 	def bytes_to_int(self, byte_arr):
@@ -59,13 +62,14 @@ class RSA():
 		if e is None and n is None:
 			e = self.e
 			n = self.n
+		k = len(self.int_to_bytes(self.n))
+
 		signature = self.bytes_to_int(signature)
 		message_obtained = pow(signature, e, n)
-		message_obtained = self.int_to_bytes(message_obtained)
+		message_obtained = self.int_to_bytes(message_obtained, k)
 
 		try:
-			# changed the fisrt 0x00 for 0x01 so I don't lose it
-			assert message_obtained[:1] == b'\x01'
+			assert message_obtained[:2] == b'\x00\x01'
 
 			h = hashlib.sha256()
 			h.update(message)
@@ -87,6 +91,8 @@ class RSA():
 			return False
 
 	def sign(self, message):
+		k = len(self.int_to_bytes(self.n))
+
 		h = hashlib.sha256()
 		h.update(message)
 		digest = h.digest()
@@ -95,7 +101,11 @@ class RSA():
 		# https://www.ibm.com/developerworks/community/forums/html/topic?id=5e85561a-e225-400a-ba5c-b3d29e4f9ab0
 		ASNSHA256 = b"\x30\x31\x30\x0D\x06\x09\x60\x86\x48\x01\x65\x03\x04\x02\x01\x05\x00\x04\x20"
 
-		block = b'\x00\x01' + b'\xff' * 42 + b'\x00' + ASNSHA256 + digest
+		padding = b''
+		for i in range(k - len(ASNSHA256) - 3 - len(digest)):
+			padding += b'\xff'
+
+		block = b'\x00\x01' + padding + b'\x00' + ASNSHA256 + digest
 
 		block = self.bytes_to_int(block)
 		if block > self.n:
@@ -128,24 +138,26 @@ def main():
 	digest = h.digest()
 
 	ASNSHA256 = b"\x30\x31\x30\x0D\x06\x09\x60\x86\x48\x01\x65\x03\x04\x02\x01\x05\x00\x04\x20"
-	block  = b'\x01\xff\x00' + ASNSHA256 + digest
-	# may be I should calculate this dynamically
-	block += b'\x00' * 150
+	for null_pad in range(1000):
+		block  = b'\x00\x01\xff\x00' + ASNSHA256 + digest
 
-	block_int = rsa.bytes_to_int(block)
+		block += b'\x00' * null_pad
 
-	cube_root, rest = gmpy2.iroot_rem(block_int, 3)
-	cube_root  = int(cube_root)
-	cube_root += 1
+		block_int = rsa.bytes_to_int(block)
 
-	evil_signature = rsa.int_to_bytes(cube_root)
+		cube_root, rest = gmpy2.iroot_rem(block_int, 3)
+		cube_root  = int(cube_root)
+		cube_root += 1
 
-	valid = rsa.verify(evil_signature, message)
+		evil_signature = rsa.int_to_bytes(cube_root)
 
-	if valid:
-		print('spoofed signature:{}'.format(evil_signature.hex()))
-	else:
-		print('Failed!')
+		valid = rsa.verify(evil_signature, message)
+
+		if valid:
+			print('spoofed signature:{}'.format(evil_signature.hex()))
+			return
+		else:
+			pass
 
 if __name__ == '__main__':
 	main()
