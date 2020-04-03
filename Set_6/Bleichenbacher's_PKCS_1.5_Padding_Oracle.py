@@ -22,7 +22,7 @@ class RSA():
 			return x % m
 
 	def gen_prime(self):
-		prime_size = 128
+		prime_size = 384
 		process = subprocess.Popen(['openssl', 'prime', '-generate', '-bits', str(prime_size), '-hex'], stdout=subprocess.PIPE)
 		prime = process.communicate()[0][:-1]
 		prime = int(prime.decode('utf-8'), 16)
@@ -168,7 +168,6 @@ def main():
 			r_min = (a*s - 3*B + 1) // n
 			r_max = ceil(b*s - 2*B, n)
 			for r in range(r_min, r_max + 1):
-				new_a = max(a, (2*B+r*n)//s)
 				new_a = max(a, ceil((2*B+r*n), s))
 				if b - a == 1:
 					new_a = max(a, ceil((2*B+r*n), s))
