@@ -6,11 +6,9 @@ import base64
 from Crypto.Cipher import AES
 
 def xor(x1, x2):
-	assert len(x1) == len(x2)
-	r = b''
-	for i in range(len(x1)):
-		r += bytes([ x1[i] ^ x2[i] ])
-	return r
+    assert len(x1) == len(x2)
+    b_list = list(map(lambda x,y: x^y, x1, x2))
+    return bytes( b_list )
 
 def encrypt_AES_ECB(key, plaintext):
 	assert len(key) == 128/8
