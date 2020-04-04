@@ -22,6 +22,7 @@ class RSA():
 			return x % m
 
 	def gen_prime(self):
+		prime_size = 128
 		prime_size = 384
 		process = subprocess.Popen(['openssl', 'prime', '-generate', '-bits', str(prime_size), '-hex'], stdout=subprocess.PIPE)
 		prime = process.communicate()[0][:-1]
@@ -113,6 +114,9 @@ def ceil(a, b):
 		add = 1
 	return (a // b) + add
 
+def floor(a, b):
+	return a // b
+
 def main():
 	# http://archiv.infsec.ethz.ch/education/fs08/secsem/bleichenbacher98.pdf
 	rsa = RSA()
@@ -140,9 +144,9 @@ def main():
 			if len(M) == 1:
 				# Step 2.c
 				a, b = M[0]
-				r = 2 * ((b*s - 2*B) // n)
+				r = 2 * floor(b*s - 2*B, n)
 				while True:
-					s_min = (2*B + r*n) // b
+					s_min = floor(2*B + r*n, b)
 					s_max = ceil(3*B + r*n, a)
 					for s in range(s_min, s_max+1):
 						if s_is_valid(c, s, e, n, rsa):
@@ -159,24 +163,16 @@ def main():
 						break
 
 		# Step 3
-		actualR = (m * s) // n
-		r_found = False
 		M_prev = M
 		M = []
 		for a, b in M_prev:
-
-			r_min = (a*s - 3*B + 1) // n
+			r_min = floor(a*s - 3*B + 1, n)
 			r_max = ceil(b*s - 2*B, n)
 			for r in range(r_min, r_max + 1):
 				new_a = max(a, ceil((2*B+r*n), s))
-				if b - a == 1:
-					new_a = max(a, ceil((2*B+r*n), s))
-				new_b = min(b, (3*B-1+r*n)//s)
+				new_b = min(b, floor(3*B-1+r*n, s))
 				if new_a <= new_b:
-					if new_a <= m and m <= new_b:
-						if r == actualR:
-							r_found = True
-						M.append( [new_a, new_b] )
+					M.append( [new_a, new_b] )
 
 		m_found = False
 		for a, b in M:
@@ -194,8 +190,6 @@ def main():
 			exit('M == []')
 		if m_found is False:
 			exit(f'm {m} not in any range')
-		if r_found is False:
-			exit(f'r {r} not in range')
 
 if __name__ == '__main__':
 	main()
