@@ -114,16 +114,6 @@ class RSA():
 		signature = self.int_to_bytes(signature)
 		return signature
 
-"""
-0x00 0x01 0xff..ff 0x00 IDh H(m)
-IDh -> identifier string of the hash function
-hash of the message
-
-768 bits de padding, 256 bits de hash
-
-https://mailarchive.ietf.org/arch/msg/openpgp/5rnE9ZRN1AokBVj3VqblGlP63QE/
-"""
-
 def main():
 	rsa = RSA()
 	rsa.gen_keypair()
