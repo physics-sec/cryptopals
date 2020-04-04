@@ -134,7 +134,6 @@ def pad_oracle_attack(C1, C2, iv):
 					ct += bytes( [b] )
 					ct += C2
 					if decrypt_AES_CBC(ct, iv) is False:
-						print('-'*1234)
 						continue # is was a 0x2 0x2 padding
 
 				intermediate = b ^ (leaked_len + 1)
