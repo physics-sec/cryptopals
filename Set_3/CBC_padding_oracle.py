@@ -32,12 +32,10 @@ def pad(s, pad_len=16):
 	pad = bytes([ b_len ]) * b_len
 	return s + pad
 
-def xor(x1, x2):
-	assert len(x1) == len(x2)
-	r = b''
-	for i in range(len(x1)):
-		r += bytes([ x1[i] ^ x2[i] ])
-	return r
+def xor(x1, x2): 
+    assert len(x1) == len(x2) 
+    b_list = list(map(lambda x,y: x^y, x1, x2)) 
+    return bytes( b_list )
 
 def encrypt_AES_ECB(plaintext):
 	assert len(key) == 128/8
@@ -129,6 +127,16 @@ def pad_oracle_attack(C1, C2, iv):
 			ct += C2
 
 			if decrypt_AES_CBC(ct, iv):
+				# check for acidental 0x2 0x2 padding
+				if leaked_len == 0:
+					ct  = C1[:-1]
+					ct += bytes( [C1[-1] ^ 1] ) # change second to last byte
+					ct += bytes( [b] )
+					ct += C2
+					if decrypt_AES_CBC(ct, iv) is False:
+						print('-'*1234)
+						continue # is was a 0x2 0x2 padding
+
 				intermediate = b ^ (leaked_len + 1)
 				intermediates = bytes( [intermediate] ) + intermediates
 				original = C1_original[-leaked_len - 1]
