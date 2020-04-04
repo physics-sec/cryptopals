@@ -32,7 +32,7 @@ def find_single_byte_xor(ct):
 		else:
 			frec[b] += 1
 
-	frec = sorted(frec, key=lambda elem: -frec[elem])
+	frec = sorted(frec, key=lambda elem: frec[elem], reverse=True)
 
 	resp = []
 	for b in frec:
@@ -81,7 +81,7 @@ def getkeysize(ct):
 			divisors[divisor] = 1
 		else:
 			divisors[divisor] += 1
-	divisors = sorted(divisors, key=lambda elem: -divisors[elem])
+	divisors = sorted(divisors, key=lambda elem: divisors[elem], reverse=True)
 
 	return divisors
 

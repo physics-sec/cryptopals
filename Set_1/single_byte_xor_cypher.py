@@ -14,7 +14,7 @@ def find_single_byte_xor(ct):
 		else:
 			frec[b] += 1
 
-	frec = sorted(frec, key=lambda elem: -frec[elem])
+	frec = sorted(frec, key=lambda elem: frec[elem], reverse=True)
 
 	resp = []
 	for b in frec:
