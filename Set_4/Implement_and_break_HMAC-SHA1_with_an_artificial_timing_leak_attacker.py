@@ -48,7 +48,7 @@ def main():
 					average += delay / Decimal(len(candidats))
 
 			# sort
-			byte_delay = {k: v for k, v in sorted(byte_delay.items(), key=lambda item: -item[1])}
+			byte_delay = {k: v for k, v in sorted(byte_delay.items(), key=lambda item: item[1], reverse=True)}
 			a = ''
 			for k in byte_delay:
 				a += bytes([k]).hex() + ' '
@@ -61,7 +61,7 @@ def main():
 					score[b] = 0
 				score[b] += byte_delay[b] / average
 
-			score = {k: v for k, v in sorted(score.items(), key=lambda item: -item[1])}
+			score = {k: v for k, v in sorted(score.items(), key=lambda item: item[1], reverse=True)}
 
 			new_score = score.copy()
 			candidats = []
