@@ -82,6 +82,7 @@ def CBC_MAC(msg, key, iv):
 def verify_signature(key, msg, iv, mac):
 	return mac == CBC_MAC(msg, key, iv)
 
+# This just returns the second to last ciphertext block xored with the last plaintext block
 def last_intermediate(plaintext, key, iv):
 	n = 16
 	assert len(key) == n
