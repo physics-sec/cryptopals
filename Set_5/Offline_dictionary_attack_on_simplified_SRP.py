@@ -1,15 +1,11 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import os
 import hmac
-import string
-import random
 import hashlib
-
-def randomString(stringLength):
-	letters = string.ascii_lowercase
-	return ''.join(random.choice(letters) for i in range(stringLength))
+import sys
+sys.path.append("..")
+from cryptolib import *
 
 class Server():
 
@@ -25,7 +21,7 @@ class Server():
 		self.A = A
 		assert I in self.users
 		P = self.users[I]
-		self.salt = os.urandom(16)
+		self.salt = rand_bytes(16)
 		h = hashlib.sha256()
 		h.update(self.salt + P)
 		xH = h.hexdigest()
@@ -33,7 +29,7 @@ class Server():
 		self.v = pow(self.g, x, self.N)
 		self.b = random.randint(1, self.N - 1)
 		self.B = pow(self.g, self.b, self.N)
-		uB = os.urandom(126 // 8).hex()
+		uB = rand_bytes(126 // 8).hex()
 		self.u = int(uB, 16)
 		return [self.salt, self.B, self.u]
 
@@ -138,7 +134,7 @@ def SRP_mitm(C, N, g):
 	a = C.a
 
 	while True:
-		password = randomString(5).encode('utf-8')
+		password = random_string(5).encode('utf-8')
 		h = hashlib.sha256()
 		h.update(salt + password)
 		xH = h.hexdigest()
@@ -174,7 +170,7 @@ def SRP_normal(C, S):
 
 def main():
 	I = b'user@mail.com'
-	P = randomString(5).encode('utf-8')
+	P = random_string(5).encode('utf-8')
 	N = 0xffffffffffffffffc90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74020bbea63b139b22514a08798e3404ddef9519b3cd3a431b302b0a6df25f14374fe1356d6d51c245e485b576625e7ec6f44c42e9a637ed6b0bff5cb6f406b7edee386bfb5a899fa5ae9f24117c4b1fe649286651ece45b3dc2007cb8a163bf0598da48361c55d39a69163fa8fd24cf5f83655d23dca3ad961c62f356208552bb9ed529077096966d670c354e4abc9804f1746c08ca237327ffffffffffffffff
 	g = 2
 
@@ -184,8 +180,6 @@ def main():
 
 	SRP_mitm(c, N, g)
 	#SRP_normal(c, s)
-
-	
 
 if __name__ == '__main__':
 	main()

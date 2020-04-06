@@ -5,10 +5,10 @@ from __future__ import print_function
 from flask import Flask, render_template, request
 import struct
 import io
-import os
-import random
-import string
 import time
+import sys
+sys.path.append("..")
+from cryptolib import *
 
 app = Flask(__name__)
 key = None
@@ -211,5 +211,5 @@ def testhmac():
 
 
 if __name__ == '__main__':
-    key = os.urandom(16)
+    key = rand_bytes(16)
     app.run(host="127.0.0.1", port=9000)

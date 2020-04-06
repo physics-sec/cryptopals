@@ -1,32 +1,19 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import os
-import base64
-import random
-from Crypto.Cipher import AES
-
-def rand_bytes(len):
-	return os.urandom(len)
+import sys
+sys.path.append("..")
+from cryptolib import *
 
 key = rand_bytes(16)
 secret = 'Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK'
 secret = base64.b64decode(secret)
 pre = rand_bytes( random.randint(0,50) )
 
-def pad(s, pad_len=16):
-	s_len = len(s)
-	resto = s_len % pad_len
-	b_len = pad_len - resto
-	pad = bytes([ b_len ]) * b_len
-	return s + pad
-
-def encrypt_AES_ECB(plaintext):
-	plaintext = pre + plaintext + secret
+def encrypt_AES_ECB_wrap(plaintext):
+	plaintext = plaintext + secret
 	plaintext = pad(plaintext)
-	cipher = AES.new(key, AES.MODE_ECB)
-	ct = cipher.encrypt(plaintext)
-	return ct
+	return encrypt_AES_ECB(plaintext, key)
 
 def get_challenge_info():
 	n = 16
@@ -34,9 +21,9 @@ def get_challenge_info():
 	for i in range(0, 16 + 1):
 		test1 = b'_' * i + b'A'
 		test2 = b'_' * i + b'B'
-		result1 = encrypt_AES_ECB( test1 )
+		result1 = encrypt_AES_ECB_wrap( test1 )
 		result1 = [result1[i:i+n] for i in range(0, len(result1), n)]
-		result2 = encrypt_AES_ECB( test2 )
+		result2 = encrypt_AES_ECB_wrap( test2 )
 		result2 = [result2[i:i+n] for i in range(0, len(result2), n)]
 		iguales = 0
 		for j in range(1, len(result1)):
@@ -51,13 +38,13 @@ def get_challenge_info():
 		else:
 			iguales_prev = iguales
 
-	ct_padding = encrypt_AES_ECB(padding)
+	ct_padding = encrypt_AES_ECB_wrap(padding)
 	len_padding = len(ct_padding)
 	i = 0
 	len_new = 0
 	while len_new <= len_padding:
 		i += 1
-		ct_new = encrypt_AES_ECB( padding + b'A' * i )
+		ct_new = encrypt_AES_ECB_wrap( padding + b'A' * i )
 		len_new = len(ct_new)
 
 	bs = len_new - len_padding
@@ -82,13 +69,13 @@ def recover_secret():
 		base += b'A' * ( bs - (len(recovered) % bs) - 1 )
 
 		blocks_recovered = int( len(recovered) / bs )
-		looking_for = encrypt_AES_ECB(base)
+		looking_for = encrypt_AES_ECB_wrap(base)
 		looking_for = looking_for[bs * (blocks_recovered + offset_blocks):bs*(blocks_recovered+offset_blocks+1)]
 
 		for b in range(0xff + 1):
 			guess = bytes([b])
 
-			ct = encrypt_AES_ECB(base + recovered + guess)
+			ct = encrypt_AES_ECB_wrap(base + recovered + guess)
 			ct = ct[bs * (blocks_recovered + offset_blocks):bs*(blocks_recovered+offset_blocks+1)]
 
 			if ct == looking_for:

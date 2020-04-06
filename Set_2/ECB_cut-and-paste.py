@@ -1,36 +1,11 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import os
-from Crypto.Cipher import AES
+import sys
+sys.path.append("..")
+from cryptolib import *
 
-key = os.urandom(16)
-
-def pad(s, pad_len=16):
-	s_len = len(s)
-	resto = s_len % pad_len
-	b_len = pad_len - resto
-	pad = bytes([ b_len ]) * b_len
-	return s + pad
-
-def unpad(s):
-	return s[:-s[-1]]
-
-def encrypt_AES_ECB(plaintext):
-	assert len(key) == 128/8
-	plaintext = pad(plaintext)
-	assert len(plaintext) % 16 == 0
-	cipher = AES.new(key, AES.MODE_ECB)
-	ct = cipher.encrypt(plaintext)
-	return ct
-
-def decrypt_AES_ECB(ciphertext):
-	assert len(key) == 128/8
-	assert len(ciphertext) % 16 == 0
-	cipher = AES.new(key, AES.MODE_ECB)
-	plaintext = cipher.decrypt(ciphertext)
-	plaintext = unpad(plaintext)
-	return plaintext
+key = rand_bytes(16)
 
 def s_to_obj(s):
 	obj = {}
@@ -52,10 +27,11 @@ def profile_for(mail):
 	obj[b'uid']   = b'10'
 	obj[b'role']  = b'user'
 	s = obj_to_s(obj)
-	return encrypt_AES_ECB(s)
+	return encrypt_AES_ECB(pad(s), key)
 
 def decrypt_and_parse(ct):
-	pt = decrypt_AES_ECB(ct)
+	pt = decrypt_AES_ECB(ct, key)
+	pt = unpad(pt)
 	return s_to_obj(pt)
 
 def get_challenge_info():

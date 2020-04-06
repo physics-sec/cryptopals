@@ -1,46 +1,12 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import os
-import struct
-import base64
-from Crypto.Cipher import AES
-
-def rand_bytes(len):
-	return os.urandom(len)
+import sys
+sys.path.append("..")
+from cryptolib import *
 
 AES_key = rand_bytes(16)
 nonce = b'\x00\x00\x00\x00\x00\x00\x00\x00'
-
-def xor(x1, x2):
-    assert len(x1) == len(x2)
-    b_list = list(map(lambda x,y: x^y, x1, x2))
-    return bytes( b_list )
-
-def encrypt_AES_ECB(AES_key, plaintext):
-	assert len(AES_key) == 128/8
-	cipher = AES.new(AES_key, AES.MODE_ECB)
-	assert len(plaintext) % 16 == 0
-	ct = cipher.encrypt(plaintext)
-	return ct
-
-def CTR(msg):
-	n = 16
-	ciphertext = b''
-	for count in range( len(msg)//n ):
-		counter = struct.pack("<Q", count)
-		plaintext = nonce + counter
-		ct = encrypt_AES_ECB(AES_key, plaintext)
-		ciphertext += xor(ct, msg[n*count:n*(count+1)])
-
-	msg_len = len(msg)
-	if msg_len % n != 0:
-		count += 1
-		counter = struct.pack("<Q", count)
-		plaintext = nonce + counter
-		ct = encrypt_AES_ECB(AES_key, plaintext)
-		ciphertext += xor(ct[:msg_len % n], msg[n*count:])
-	return ciphertext
 
 def main():
 	fh = open('20.txt')
@@ -55,7 +21,7 @@ def main():
 		pt_len = len(pt)
 		if pt_len > max_pt_len:
 			max_pt_len = pt_len
-		ct = CTR(pt)
+		ct = CTR(pt, AES_key, nonce)
 		cts.append(ct)
 
 	# get real key for testing

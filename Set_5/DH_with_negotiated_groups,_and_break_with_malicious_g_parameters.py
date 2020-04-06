@@ -2,15 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import io
-import os
-import struct
-import random
-import base64
-import string
-from Crypto.Cipher import AES
-
-def rand_bytes(len):
-	return os.urandom(len)
+import sys
+sys.path.append("..")
+from cryptolib import *
 
 class Sha1Hash(object):
 	"""A class that mimics that hashlib api and implements the SHA-1 algorithm."""
@@ -145,81 +139,6 @@ class Sha1Hash(object):
 			return h
 		return self._process_chunk(message[64:], *h)
 
-def pad(s, pad_len=16):
-	s_len = len(s)
-	resto = s_len % pad_len
-	b_len = pad_len - resto
-	pad = bytes([ b_len ]) * b_len
-	return s + pad
-
-def xor(x1, x2):
-    assert len(x1) == len(x2)
-    b_list = list(map(lambda x,y: x^y, x1, x2))
-    return bytes( b_list )
-
-def encrypt_AES_ECB(plaintext, key):
-	assert len(key) == 128/8
-	cipher = AES.new(key, AES.MODE_ECB)
-	assert len(plaintext) % 16 == 0
-	ct = cipher.encrypt(plaintext)
-	return ct
-
-def encrypt_AES_CBC(plaintext, key, iv):
-	n = 16
-	assert len(key) == n
-	assert len(iv) == n
-	plaintext = pad(plaintext)
-
-	blocks = [plaintext[i:i+n] for i in range(0, len(plaintext), n)]
-	ct = b''
-	previus_block = iv
-
-	for block in blocks:
-		block_x = xor(block, previus_block)
-		block_en = encrypt_AES_ECB(block_x, key)
-		previus_block = block_en
-		ct += block_en
-	return ct
-
-def decrypt_AES_ECB(data, key):
-	assert len(key) == 128/8
-	cipher = AES.new(key, AES.MODE_ECB)
-	pt = cipher.decrypt(data)
-	return pt
-
-def unpad(s):
-	if len(s) % 16 != 0:
-		raise Exception('Bad Padding')
-	pad_len = s[-1]
-	if pad_len > 16 or pad_len < 1:
-		raise Exception('Bad Padding')
-	for i in range(1, pad_len + 1):
-		if s[-i] != pad_len:
-			raise Exception('Bad Padding')
-	return s[:-s[-i]]
-
-def decrypt_AES_CBC(ciphertext, key, iv):
-	n = 16
-	assert len(key) == n
-	assert len(iv) == n
-	ciphertext_len = len(ciphertext)
-	assert ciphertext_len % n == 0
-
-	blocks = [ciphertext[i:i+n] for i in range(0, ciphertext_len, n)]
-	pt = b''
-	previus_block = iv
-
-	for block in blocks:
-		d_block = decrypt_AES_ECB(block, key)
-		pt_block = xor(d_block, previus_block)
-		pt += pt_block
-		previus_block = block
-	return unpad(pt)
-
-def randomString(stringLength):
-	letters = string.ascii_lowercase
-	return ''.join(random.choice(letters) for i in range(stringLength))
-
 class Person():
 
 	def genPK(self):
@@ -269,7 +188,7 @@ def attack1():
 	bob.recvPK(A)
 
 	alice.recvPK(B)
-	ciphertext = alice.sendMessage( randomString(20).encode('utf-8') )
+	ciphertext = alice.sendMessage( random_string(20).encode('utf-8') )
 
 	"""
 	A = g ^ a mod p
@@ -314,7 +233,7 @@ def attack2():
 	bob.recvPK(A)
 
 	alice.recvPK(B)
-	ciphertext = alice.sendMessage( randomString(20).encode('utf-8') )
+	ciphertext = alice.sendMessage( random_string(20).encode('utf-8') )
 
 	"""
 	A = g ^ a mod p
@@ -359,7 +278,7 @@ def attack3():
 	bob.recvPK(A)
 
 	alice.recvPK(B)
-	ciphertext = alice.sendMessage( randomString(20).encode('utf-8') )
+	ciphertext = alice.sendMessage( random_string(20).encode('utf-8') )
 
 	"""
 	A = g ^ a mod p
@@ -409,9 +328,9 @@ def attack3():
 
 def main():
 	pass
-	#attack1()
-	#attack2()
-	#attack3()
+	attack1()
+	attack2()
+	attack3()
 
 if __name__ == '__main__':
 	main()

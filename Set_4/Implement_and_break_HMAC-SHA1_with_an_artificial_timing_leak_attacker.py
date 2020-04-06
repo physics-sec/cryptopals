@@ -2,21 +2,18 @@
 # -*- coding: utf-8 -*-
 
 import time
-import string
-import random
 import requests
 from decimal import *
-
-def randomString(stringLength):
-	letters = string.ascii_lowercase
-	return ''.join(random.choice(letters) for i in range(stringLength))
+import sys
+sys.path.append("..")
+from cryptolib import *
 
 def main():
 
 	ratio = 0.7
 	rounds_per_byte = 2
 
-	file = randomString(7)
+	file = random_string(7)
 
 	url_base = 'http://127.0.0.1:9000/test?file={}&signature='.format(file)
 
@@ -94,3 +91,5 @@ if __name__ == '__main__':
 		main()
 	except requests.exceptions.ConnectionError:
 		print('ConnectionRefusedError')
+	except KeyboardInterrupt:
+		pass

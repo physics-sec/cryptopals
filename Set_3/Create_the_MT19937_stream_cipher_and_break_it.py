@@ -1,13 +1,12 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import os
 import time
 import random
 import string
-
-def rand_bytes(len):
-    return os.urandom(len)
+import sys
+sys.path.append("..")
+from cryptolib import *
 
 class MT19937:
 
@@ -144,21 +143,19 @@ def check_token(token):
             return True
     return False
 
-def main():
-
-    """
+def attack1():
     pt = randomString( random.randint(10, 30) ).encode('utf-8')
     ct = get_ct(pt)
     recover_sk(pt, ct)
-    """
 
-    """
+def attack2():
     token = password_reset_token()
     if check_token(token):
         print('the token was generated via MT19937')
     else:
         print('the token was NOT generated via MT19937')
-    """
 
 if __name__ == '__main__':
-    main()
+    pass
+    #attack1()
+    #attack2()

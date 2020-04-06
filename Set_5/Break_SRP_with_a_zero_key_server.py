@@ -1,11 +1,12 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import os
-import random
 import hashlib
 from flask import Flask, render_template, request
 app = Flask(__name__)
+import sys
+sys.path.append("..")
+from cryptolib import *
 
 class Server():
 
@@ -23,7 +24,7 @@ class Server():
 
 		assert I in self.users
 		P = self.users[I]
-		self.salt = os.urandom(16)
+		self.salt = rand_bytes(16)
 		h = hashlib.sha256()
 		h.update(self.salt + P)
 		xH = h.hexdigest()

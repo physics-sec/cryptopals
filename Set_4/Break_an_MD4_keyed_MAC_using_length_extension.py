@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import os
-import struct
-import random
+import sys
+sys.path.append("..")
+from cryptolib import *
 
 class MD4(object):
     def __init__(self, data=b""):
@@ -117,7 +117,7 @@ def length_extension_md4(oldmac, oldmsg, keylen, extension):
 def main():
 
     keylen = random.randint(16, 64)
-    key = os.urandom(keylen)
+    key =  rand_bytes(keylen)
 
     msg = b"comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon"
     mac = HMAC_MD4(msg, key)

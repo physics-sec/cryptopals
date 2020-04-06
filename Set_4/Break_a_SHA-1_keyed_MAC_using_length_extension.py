@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
-import struct
 import io
-import os
-import random
+import sys
+sys.path.append("..")
+from cryptolib import *
 
 class Sha1Hash(object):
     """A class that mimics that hashlib api and implements the SHA-1 algorithm."""
@@ -196,7 +196,7 @@ def length_extension_sha1(oldmac, oldmsg, keylen, extension):
 def main():
 
     keylen = random.randint(16, 64)
-    key = os.urandom(keylen)
+    key = rand_bytes(keylen)
 
     msg = b"comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon"
 

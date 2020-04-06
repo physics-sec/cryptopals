@@ -1,80 +1,9 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import os
-import random
-import string
-from Crypto.Cipher import AES
-
-def randomString(stringLength):
-	letters = string.ascii_lowercase
-	return ''.join(random.choice(letters) for i in range(stringLength))
-
-def rand_bytes(len):
-	return os.urandom(len)
-
-def unpad(s):
-	return s[:-s[-1]]
-
-def pad(s, pad_len=16):
-	s_len = len(s)
-	resto = s_len % pad_len
-	b_len = pad_len - resto
-	pad = bytes([ b_len ]) * b_len
-	return s + pad
-
-def xor(x1, x2): 
-	assert len(x1) == len(x2) 
-	b_list = list(map(lambda x,y: x^y, x1, x2)) 
-	return bytes( b_list ) 
-
-def decrypt_AES_ECB(data, key):
-	assert len(key) == 128/8
-	cipher = AES.new(key, AES.MODE_ECB)
-	pt = cipher.decrypt(data)
-	return pt
-
-def decrypt_AES_CBC(ciphertext, key, iv):
-	n = 16
-	assert len(key) == n
-	assert len(iv) == n
-	ciphertext_len = len(ciphertext)
-	assert ciphertext_len % n == 0
-
-	blocks = [ciphertext[i:i+n] for i in range(0, ciphertext_len, n)]
-	pt = []
-	previus_block = iv
-
-	for block in blocks:
-		d_block = decrypt_AES_ECB(block, key)
-		pt_block = xor(d_block, previus_block)
-		pt.append(pt_block)
-		previus_block = block
-	return b''.join(pt)
-
-def encrypt_AES_ECB(plaintext, key):
-	assert len(key) == 128/8
-	cipher = AES.new(key, AES.MODE_ECB)
-	assert len(plaintext) % 16 == 0
-	ct = cipher.encrypt(plaintext)
-	return ct
-
-def encrypt_AES_CBC(plaintext, key, iv):
-	n = 16
-	assert len(key) == n
-	assert len(iv) == n
-	plaintext = pad(plaintext)
-
-	blocks = [plaintext[i:i+n] for i in range(0, len(plaintext), n)]
-	ct = b''
-	previus_block = iv
-
-	for block in blocks:
-		block_x = xor(block, previus_block)
-		block_en = encrypt_AES_ECB(block_x, key)
-		previus_block = block_en
-		ct += block_en
-	return ct
+import sys
+sys.path.append("..")
+from cryptolib import *
 
 def CBC_MAC(msg, key, iv):
 	return encrypt_AES_CBC(msg, key, iv)[-16:]
@@ -115,7 +44,7 @@ def get_evil_js(code, evil_code, key, iv,):
 
 	# get second to last block
 	while True:
-		second_to_last_pt_block  = randomString(16).encode('utf-8')
+		second_to_last_pt_block  = random_string(16).encode('utf-8')
 		intermediate = last_intermediate(evil_js + second_to_last_pt_block, key, iv)
 		AES_padding = b'\x10' * 16
 		second_to_last_ct = xor(intermediate, AES_padding)

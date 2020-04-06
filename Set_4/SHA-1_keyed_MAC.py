@@ -2,65 +2,10 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
-import struct
 import io
-import os
-import random
-import string
-
-def _left_rotate(n, b):
-    """Left rotate a 32-bit integer n by b bits."""
-    return ((n << b) | (n >> (32 - b))) & 0xffffffff
-
-
-def _process_chunk(chunk, h0, h1, h2, h3, h4):
-    """Process a chunk of data and return the new digest variables."""
-    assert len(chunk) == 64
-
-    w = [0] * 80
-
-    # Break chunk into sixteen 4-byte big-endian words w[i]
-    for i in range(16):
-        w[i] = struct.unpack(b'>I', chunk[i * 4:i * 4 + 4])[0]
-
-    # Extend the sixteen 4-byte words into eighty 4-byte words
-    for i in range(16, 80):
-        w[i] = _left_rotate(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1)
-
-    # Initialize hash value for this chunk
-    a = h0
-    b = h1
-    c = h2
-    d = h3
-    e = h4
-
-    for i in range(80):
-        if 0 <= i <= 19:
-            # Use alternative 1 for f from FIPS PB 180-1 to avoid bitwise not
-            f = d ^ (b & (c ^ d))
-            k = 0x5A827999
-        elif 20 <= i <= 39:
-            f = b ^ c ^ d
-            k = 0x6ED9EBA1
-        elif 40 <= i <= 59:
-            f = (b & c) | (b & d) | (c & d)
-            k = 0x8F1BBCDC
-        elif 60 <= i <= 79:
-            f = b ^ c ^ d
-            k = 0xCA62C1D6
-
-        a, b, c, d, e = ((_left_rotate(a, 5) + f + e + k + w[i]) & 0xffffffff,
-                         a, _left_rotate(b, 30), c, d)
-
-    # Add this chunk's hash to result so far
-    h0 = (h0 + a) & 0xffffffff
-    h1 = (h1 + b) & 0xffffffff
-    h2 = (h2 + c) & 0xffffffff
-    h3 = (h3 + d) & 0xffffffff
-    h4 = (h4 + e) & 0xffffffff
-
-    return h0, h1, h2, h3, h4
-
+import sys
+sys.path.append("..")
+from cryptolib import *
 
 class Sha1Hash(object):
     """A class that mimics that hashlib api and implements the SHA-1 algorithm."""
@@ -85,6 +30,60 @@ class Sha1Hash(object):
         # Length in bytes of all data that has been processed so far
         self._message_byte_length = 0
 
+    def _left_rotate(self, n, b):
+        """Left rotate a 32-bit integer n by b bits."""
+        return ((n << b) | (n >> (32 - b))) & 0xffffffff
+
+
+    def _process_chunk(self, chunk, h0, h1, h2, h3, h4):
+        """Process a chunk of data and return the new digest variables."""
+        assert len(chunk) == 64
+
+        w = [0] * 80
+
+        # Break chunk into sixteen 4-byte big-endian words w[i]
+        for i in range(16):
+            w[i] = struct.unpack(b'>I', chunk[i * 4:i * 4 + 4])[0]
+
+        # Extend the sixteen 4-byte words into eighty 4-byte words
+        for i in range(16, 80):
+            w[i] = self._left_rotate(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1)
+
+        # Initialize hash value for this chunk
+        a = h0
+        b = h1
+        c = h2
+        d = h3
+        e = h4
+
+        for i in range(80):
+            if 0 <= i <= 19:
+                # Use alternative 1 for f from FIPS PB 180-1 to avoid bitwise not
+                f = d ^ (b & (c ^ d))
+                k = 0x5A827999
+            elif 20 <= i <= 39:
+                f = b ^ c ^ d
+                k = 0x6ED9EBA1
+            elif 40 <= i <= 59:
+                f = (b & c) | (b & d) | (c & d)
+                k = 0x8F1BBCDC
+            elif 60 <= i <= 79:
+                f = b ^ c ^ d
+                k = 0xCA62C1D6
+
+            a, b, c, d, e = ((self._left_rotate(a, 5) + f + e + k + w[i]) & 0xffffffff,
+                             a, self._left_rotate(b, 30), c, d)
+
+        # Add this chunk's hash to result so far
+        h0 = (h0 + a) & 0xffffffff
+        h1 = (h1 + b) & 0xffffffff
+        h2 = (h2 + c) & 0xffffffff
+        h3 = (h3 + d) & 0xffffffff
+        h4 = (h4 + e) & 0xffffffff
+ 
+        return h0, h1, h2, h3, h4
+
+
     def update(self, arg):
         """Update the current digest.
 
@@ -101,7 +100,7 @@ class Sha1Hash(object):
 
         # Read the rest of the data, 64 bytes at a time
         while len(chunk) == 64:
-            self._h = _process_chunk(chunk, *self._h)
+            self._h = self._process_chunk(chunk, *self._h)
             self._message_byte_length += 64
             chunk = arg.read(64)
 
@@ -135,16 +134,26 @@ class Sha1Hash(object):
 
         # Process the final chunk
         # At this point, the length of the message is either 64 or 128 bytes.
-        h = _process_chunk(message[:64], *self._h)
+        h = self._process_chunk(message[:64], *self._h)
+
         if len(message) == 64:
             return h
-        return _process_chunk(message[64:], *h)
+        return self._process_chunk(message[64:], *h)
+
+    def set_registers(self, h0, h1, h2, h3, h4):
+        self._h = (
+            int.from_bytes(h0, "big"),
+            int.from_bytes(h1, "big"),
+            int.from_bytes(h2, "big"),
+            int.from_bytes(h3, "big"),
+            int.from_bytes(h4, "big")
+        )
 
 
 def sha1(data=b''):
     return Sha1Hash().update(data).hexdigest()
 
-key = os.urandom(16)
+key = rand_bytes(16)
 
 def HMAC_SHA1(message):
     return sha1(key + message)
@@ -152,13 +161,9 @@ def HMAC_SHA1(message):
 def check_mac(message, mac):
     return HMAC_SHA1(message) == mac
 
-def randomString(stringLength):
-    letters = string.ascii_lowercase
-    return ''.join(random.choice(letters) for i in range(stringLength))
-
 def main():
-    lenmsg = random.randint(0, 100)
-    msg = randomString(lenmsg).encode('utf-8')
+    lenmsg = random.randint(1, 100)
+    msg = random_string(lenmsg).encode('utf-8')
     mac = HMAC_SHA1(msg)
 
     index = random.randint(0, lenmsg - 1)
@@ -169,9 +174,9 @@ def main():
     new_msg += msg[index+1:]
 
     if check_mac(new_msg, mac):
-        print('mac bypassed!')
+        print('mac bypassed! (bad)')
     else:
-        print('mac check failed')
+        print('mac check failed (good)')
 
 if __name__ == '__main__':
     main()

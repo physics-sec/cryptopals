@@ -57,9 +57,13 @@ class MT19937:
             self.MT[i] = self.MT[(i + self.m) % self.n] ^ xA
         self.index = 0
 
-rng  = MT19937()
-rng.seed_mt(1234)
-for i in range(1000):
-    rng.extract_number()
-print(rng.extract_number())
-print(rng.extract_number())
+def main():
+    rng  = MT19937()
+    rng.seed_mt(1234)
+    for i in range(1000):
+        rng.extract_number()
+    print(rng.extract_number())
+    print(rng.extract_number())
+
+if __name__ == '__main__':
+    main()
